@@ -22,16 +22,16 @@ export default function ApplicationStatus({ email }: { email: string }) {
       try {
         setLoading(true)
         setError(null)
-        console.log("[v0] Fetching applicant data for email:", email)
+        console.log("Fetching applicant data for email:", email)
 
         const res = await fetch(
           `https://rahmah-exchange-backend-production.up.railway.app/api/zakatApplicants?email=${encodeURIComponent(email)}`,
         )
 
-        console.log("[v0] Response status:", res.status)
+        console.log("Response status:", res.status)
 
         const result = await res.json()
-        console.log("[v0] API Response:", result)
+        console.log("API Response:", result)
 
         let applicantData = null
 
@@ -52,7 +52,7 @@ export default function ApplicationStatus({ email }: { email: string }) {
           applicantData = result
         }
 
-        console.log("[v0] Parsed applicant data:", applicantData)
+        console.log("Parsed applicant data:", applicantData)
 
         if (applicantData) {
           setData(applicantData)
@@ -60,7 +60,7 @@ export default function ApplicationStatus({ email }: { email: string }) {
           setError("Application data not found. Please check if you've submitted an application or try again later.")
         }
       } catch (err) {
-        console.error("[v0] Error fetching applicant:", err)
+        console.error("Error fetching applicant:", err)
         setError("Failed to fetch application status. Please check your connection and try again.")
       } finally {
         setLoading(false)
