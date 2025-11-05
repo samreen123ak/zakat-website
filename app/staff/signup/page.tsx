@@ -5,34 +5,33 @@ import Link from "next/link"
 import { Heart } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-export default function StaffLoginPage() {
+export default function StaffSignupPage() {
   const router = useRouter()
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setLoading(true)
 
     try {
       const res = await fetch(
-        "https://rahmah-exchange-backend-production.up.railway.app/api/auth/login",
+        "https://rahmah-exchange-backend-production.up.railway.app/api/auth/signup",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
         }
       )
 
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.message || "Wrong email or password")
+        setError(data.message || "Signup failed")
         setLoading(false)
         return
       }
@@ -40,9 +39,10 @@ export default function StaffLoginPage() {
       // ✅ Save token
       localStorage.setItem("rahmah_admin_token", data.token)
 
+      // ✅ Redirect
       router.push("/staff/dashboard")
     } catch (err) {
-      setError("Server say 'I can't talk right now' ")
+      setError("Server problem, Please try again")
     } finally {
       setLoading(false)
     }
@@ -68,10 +68,21 @@ export default function StaffLoginPage() {
           </div>
 
           <div className="bg-white rounded-2xl p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Login</h2>
-            <p className="text-gray-600 mb-8">Please enter details</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign Up</h2>
+            <p className="text-gray-600 mb-8">Create your admin account</p>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleSignup} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Full Name"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Email</label>
                 <input
@@ -89,7 +100,7 @@ export default function StaffLoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
+                  placeholder="Choose a strong password"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
                 />
               </div>
@@ -101,14 +112,14 @@ export default function StaffLoginPage() {
                 disabled={loading}
                 className="w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition"
               >
-                {loading ? "Wait.." : "Log In"}
+                {loading ? "Wait... " : "Sign Up"}
               </button>
             </form>
 
             <p className="text-center text-gray-600 text-sm mt-8">
-              Not have account?{" "}
-              <Link href="/staff/signup" className="text-teal-600 font-medium hover:underline">
-                Sign up
+              Already have account?{" "}
+              <Link href="/staff/login" className="text-teal-600 font-medium hover:underline">
+                Login
               </Link>
             </p>
           </div>
