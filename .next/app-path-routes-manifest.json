@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/form/page": "/form",
+  "/page": "/",
+  "/staff/cases/[caseId]/page": "/staff/cases/[caseId]",
+  "/staff/cases/page": "/staff/cases",
+  "/staff/dashboard/page": "/staff/dashboard",
+  "/staff/login/page": "/staff/login",
+  "/staff/signup/page": "/staff/signup"
+}

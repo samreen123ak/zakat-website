@@ -12,6 +12,8 @@ interface ApplicationData {
   requestType: string
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://rahmah-exchange-backend-production.up.railway.app"
+
 export default function ApplicationStatus({ email }: { email: string }) {
   const [data, setData] = useState<ApplicationData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -22,11 +24,9 @@ export default function ApplicationStatus({ email }: { email: string }) {
       try {
         setLoading(true)
         setError(null)
-        console.log("Fetching applicant data for email:", email)
+        console.log("[v0] Fetching applicant data for email:", email)
 
-        const res = await fetch(
-          `https://rahmah-exchange-backend-production.up.railway.app/api/zakatApplicants?email=${encodeURIComponent(email)}`,
-        )
+        const res = await fetch(`${API_BASE_URL}/api/zakatApplicants?email=${encodeURIComponent(email)}`)
 
         console.log("Response status:", res.status)
 

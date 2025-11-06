@@ -33,7 +33,8 @@ interface ValidationErrors {
   [key: string]: string
 }
 
-const API_URL = "https://rahmah-exchange-backend-production.up.railway.app/api/zakatApplicants"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://rahmah-exchange-backend-production.up.railway.app"
+const API_URL = `${API_BASE_URL}/api/zakatApplicants`
 
 const STEPS = [
   { number: 1, label: "Personal" },
@@ -381,9 +382,6 @@ export default function ApplyPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
-      const API_BASE_URL =
-        process.env.NEXT_PUBLIC_API_URL || "https://rahmah-exchange-backend-production.up.railway.app"
-
       const submitData = new FormData()
 
       submitData.append("firstName", formData.firstName)
@@ -421,13 +419,9 @@ export default function ApplyPage() {
         submitData.append(`documents`, file)
       })
 
-      const response = await axios.post(
-        "https://rahmah-exchange-backend-production.up.railway.app/api/zakatApplicants",
-        submitData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      )
+      const response = await axios.post(API_URL, submitData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
 
       if (response) {
         console.log("Application submitted successfully:", response.data)

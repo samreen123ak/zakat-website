@@ -1,9 +1,12 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import Link from "next/link"
-import { Heart } from "lucide-react"
+import { Heart, AlertCircle, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { setAuthToken, API_BASE_URL } from "@/lib/auth-utils"
 
 export default function StaffLoginPage() {
   const router = useRouter()
@@ -18,93 +21,109 @@ export default function StaffLoginPage() {
     setLoading(true)
 
     try {
-      const res = await fetch(
-        "https://rahmah-exchange-backend-production.up.railway.app/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      )
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
 
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.message || "Wrong email or password")
+        setError(data.message || "Invalid credentials")
         setLoading(false)
         return
       }
 
-      // ✅ Save token
-      localStorage.setItem("rahmah_admin_token", data.token)
+      setAuthToken(data.token)
 
-      router.push("/staff/dashboard")
+    
+        router.push("/staff/dashboard")
+    
     } catch (err) {
-      setError("Server say 'I can't talk right now' ")
+      setError("Connection error. Please try again.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-blue-50 flex flex-col">
-      <header className="px-8 py-6">
-        <Link href="/" className="text-gray-900 font-medium hover:text-gray-600 flex items-center gap-2">
+    <div className="min-h-screen bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-600 flex flex-col">
+      <header className="px-8 py-6 bg-white/5 backdrop-blur-sm">
+        <Link href="/" className="text-white font-medium hover:text-teal-100 flex items-center gap-2 transition">
           <span>←</span> Back to Home
         </Link>
       </header>
 
-      <div className="flex-1 flex items-center justify-center px-4">
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center gap-3 mb-6 bg-white rounded-full px-6 py-3 shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-full flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white fill-white" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">Rahmah Exchange</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                Rahmah Exchange
+              </h1>
             </div>
+            <p className="text-white/80 text-sm">Staff Administration Portal</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Login</h2>
-            <p className="text-gray-600 mb-8">Please enter your credentials</p>
+          <div className="bg-white rounded-2xl p-8 shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Staff Login</h2>
+            <p className="text-gray-600 mb-8">Access the admin dashboard</p>
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Email</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="staff@example.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Password</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
+                  placeholder="Enter your password"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
                 />
               </div>
 
-              {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition"
+                className="w-full px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? "Wait.." : "Log In"}
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {loading ? "Logging in..." : "Log In"}
               </button>
             </form>
+
+            {/* <p className="text-center text-gray-600 text-sm mt-8">
+              Don't have an account?{" "}
+              <Link href="/staff/signup" className="text-teal-600 font-semibold hover:text-teal-700 transition">
+                Contact administrator
+              </Link>
+            </p> */}
           </div>
+
+          <p className="text-center text-white/60 text-xs mt-6">Protected area. Unauthorized access is prohibited.</p>
         </div>
       </div>
     </div>

@@ -1,8 +1,11 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import type React from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { CheckCircle2, TrendingUp, DollarSign, FileText, Heart } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { CheckCircle2, TrendingUp, FileText, Heart, LogOut, Shield } from "lucide-react"
+import { removeAuthToken, getAuthToken, API_BASE_URL } from "@/lib/auth-utils"
 
 type ZakatApplicant = {
   id?: string | number
@@ -26,99 +29,120 @@ type StatusRowProps = {
 }
 
 export default function DashboardPage() {
-  const [activeTab, ] = useState("overview")
-  // const [showSuccess, ] = useState(true)
+  const [activeTab] = useState("overview")
   const [applicants, setApplicants] = useState<ZakatApplicant[]>([])
   const [totalFromAPI, setTotalFromAPI] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showDebug,] = useState(false)
+  const [showDebug] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = getAuthToken()
+    if (!token) {
+      router.push("/staff/login")
+      return
+    }
+  }, [router])
 
   const normalizeStatus = (status?: string) => {
-    return (status || "")
-      .toString()
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, " ")
+    return (status || "").toString().trim().toLowerCase().replace(/\s+/g, " ")
   }
 
-  // fetch applicants and attach a normalized status for reliable counting
- useEffect(() => {
-  const fetchApplicants = async () => {
+  const handleLogout = async () => {
     try {
-      const res = await fetch("https://rahmah-exchange-backend-production.up.railway.app/api/zakatApplicants")
-      const json = await res.json()
-
-      // ✅ FIX: handle API shape properly
-      const dataArray: any[] =
-        Array.isArray(json)
-          ? json
-          : json.items || json.data || []
-
-      const normalizedArray: ZakatApplicant[] = dataArray.map((a) => ({
-        ...a,
-        normalizedStatus: normalizeStatus(a?.status),
-      }))
-
-      setApplicants(normalizedArray)
-
-      if (typeof json.total === "number") {
-        setTotalFromAPI(json.total)
-      } else if (typeof json.totalCount === "number") {
-        setTotalFromAPI(json.totalCount)
-      } else {
-        // ✅ fallback if total isn’t given
-        setTotalFromAPI(normalizedArray.length)
+      const token = getAuthToken()
+      if (token) {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }).catch(() => {})
       }
-    } catch (error) {
-      console.error("Error fetching applicants:", error)
-      setApplicants([])
-    } finally {
-      setLoading(false)
+      removeAuthToken()
+      router.push("/staff/login")
+    } catch (err) {
+      console.error("Logout failed:", err)
+      removeAuthToken()
+      router.push("/staff/login")
     }
   }
 
-  fetchApplicants()
-}, [])
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/zakatApplicants`)
+        const json = await res.json()
 
-  // counts - use the precomputed normalizedStatus for exact matching
+        const dataArray: any[] = Array.isArray(json) ? json : json.items || json.data || []
+
+        const normalizedArray: ZakatApplicant[] = dataArray.map((a) => ({
+          ...a,
+          normalizedStatus: normalizeStatus(a?.status),
+        }))
+
+        setApplicants(normalizedArray)
+
+        if (typeof json.total === "number") {
+          setTotalFromAPI(json.total)
+        } else if (typeof json.totalCount === "number") {
+          setTotalFromAPI(json.totalCount)
+        } else {
+          setTotalFromAPI(normalizedArray.length)
+        }
+      } catch (error) {
+        console.error("Error fetching applicants:", error)
+        setApplicants([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchApplicants()
+  }, [])
+
   const approvedCount = applicants.filter((app) => app.normalizedStatus === "approved").length
-  const submittedCount = applicants.filter((app) => app.normalizedStatus === "submitted").length
   const pendingCount = applicants.filter((app) => app.normalizedStatus === "pending").length
   const rejectedCount = applicants.filter((app) => app.normalizedStatus === "rejected").length
 
-  // Today's submissions (robust date handling)
   const todayISO = new Date().toISOString().split("T")[0]
   const todaysSubmissions = applicants.filter((app) => {
     if (!app.createdAt) return false
     try {
       const createdISO = new Date(app.createdAt).toISOString().split("T")[0]
       return createdISO === todayISO
-    } catch (e) {
-      // fallback: string comparison if the field is already a date-only string
+    } catch {
       return app.createdAt?.toString().startsWith(todayISO)
     }
   }).length
 
-  // unique statuses (normalized, capitalized for display)
   const uniqueStatuses = [...new Set(applicants.map((a) => a.normalizedStatus || ""))]
     .filter(Boolean)
     .sort()
     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-8 py-6">
+      <header className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center">
-              <Heart className="w-5 h-5 text-white fill-white" />
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-full flex items-center justify-center shadow-lg">
+              <Heart className="w-6 h-6 text-white fill-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-sm text-gray-500">Case Management System</p>
+            </div>
           </div>
-          <Link href="/" className="text-gray-600 hover:text-gray-900">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-red-50 hover:text-red-600 rounded-lg transition font-medium"
+          >
+            <LogOut className="w-4 h-4" />
             Logout
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -126,70 +150,67 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-8 py-12">
         {activeTab === "overview" && (
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-8">Welcome, To Admin Dashboard</h2>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+              <p className="text-gray-600">Here's an overview of pending applications</p>
+            </div>
 
             {loading ? (
-              <p className="text-gray-600">...</p>
+              <div className="bg-white rounded-lg p-12 text-center">
+                <p className="text-gray-600">Loading dashboard...</p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                  <StatCard title="Total Applications" value={totalFromAPI ?? applicants.length} icon={<FileText className="w-5 h-5 text-gray-400" />} />
-
                   <StatCard
-                    title="New Submissions"
-                    value={todaysSubmissions}
-                    color="text-blue-600"
-                    icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
+                    title="Total Applications"
+                    value={totalFromAPI ?? applicants.length}
+                    icon={<FileText className="w-5 h-5" />}
+                    color="from-blue-600 to-cyan-600"
                   />
-
+                  <StatCard
+                    title="Pending Review"
+                    value={pendingCount}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    color="from-yellow-600 to-orange-600"
+                  />
                   <StatCard
                     title="Approved"
                     value={approvedCount}
-                    color="text-green-600"
-                    icon={<CheckCircle2 className="w-5 h-5 text-green-600" />}
+                    icon={<CheckCircle2 className="w-5 h-5" />}
+                    color="from-green-600 to-emerald-600"
                   />
-
                   <StatCard
-                    title="Total Disbursed"
-                    value={"$0.00"}
-                    color="text-teal-600"
-                    icon={<DollarSign className="w-5 h-5 text-teal-600" />}
+                    title="New Today"
+                    value={todaysSubmissions}
+                    icon={<Shield className="w-5 h-5" />}
+                    color="from-teal-600 to-cyan-600"
                   />
                 </div>
 
-                {/* Application Status Breakdown */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-white rounded-lg p-8 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-900 mb-8">Application Status Breakdown</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+                    <h3 className="text-xl font-bold text-gray-900 mb-8">Application Status</h3>
                     <div className="space-y-6">
-                      <StatusRow label="Submitted" value={submittedCount} color="text-blue-600" />
-                      <StatusRow label="Pending" value={pendingCount} color="text-gray-400" />
-                      <StatusRow label="Approved" value={approvedCount} color="text-green-600" />
-                      <StatusRow label="Rejected" value={rejectedCount} color="text-gray-400" />
+                      <StatusRow label="Pending" value={pendingCount} color="from-yellow-500 to-orange-500" />
+                      <StatusRow label="Approved" value={approvedCount} color="from-green-500 to-emerald-500" />
+                      <StatusRow label="Rejected" value={rejectedCount} color="from-red-500 to-rose-500" />
                     </div>
-
-                    {showDebug && (
-                      <div className="mt-6 text-sm text-gray-600">
-                        <div>Unique statuses: {uniqueStatuses.join(", ")}</div>
-                        <div>Total raw applicants: {applicants.length}</div>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Quick Actions */}
-                  <div className="bg-white rounded-lg p-8 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-900 mb-8">Quick Actions</h3>
-                    <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h3>
+                    <div className="space-y-3">
                       <Link href="/staff/cases">
-                        <button className="w-full px-6 py-3 border border-gray-300 rounded-lg text-gray-900 font-medium hover:bg-gray-50 transition text-left flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-gray-600" />
+                        <button className="w-full px-6 py-3 border-2 border-teal-600 text-teal-600 rounded-lg font-medium hover:bg-teal-50 transition">
                           View All Cases
                         </button>
                       </Link>
-                      <button className="w-full px-6 py-3 border border-gray-300 rounded-lg text-gray-900 font-medium hover:bg-gray-50 transition text-left flex items-center gap-3">
-                        <TrendingUp className="w-5 h-5 text-gray-600" />
-                        Pending Approvals
-                      </button>
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-semibold">{pendingCount}</span> applications awaiting review
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -202,23 +223,25 @@ export default function DashboardPage() {
   )
 }
 
-function StatCard({ title, value, icon, color = "text-gray-900" }: StatCardProps) {
+function StatCard({ title, value, icon, color = "text-gray-900" }: any) {
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-gray-600 font-medium">{title}</h3>
-        {icon}
+        <div className={`w-10 h-10 bg-gradient-to-br ${color} rounded-lg flex items-center justify-center text-white`}>
+          {icon}
+        </div>
       </div>
-      <p className={`text-4xl font-bold ${color}`}>{value}</p>
+      <p className="text-4xl font-bold text-gray-900">{value}</p>
     </div>
   )
 }
 
-function StatusRow({ label, value, color }: StatusRowProps) {
+function StatusRow({ label, value, color }: any) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-gray-700">{label}</span>
-      <span className={`text-lg font-semibold ${color}`}>{value}</span>
+    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+      <span className="text-gray-700 font-medium">{label}</span>
+      <div className={`px-4 py-2 bg-gradient-to-r ${color} text-white rounded-lg font-semibold`}>{value}</div>
     </div>
   )
 }
