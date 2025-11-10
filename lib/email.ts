@@ -1,4 +1,5 @@
-import nodemailer from "nodemailer"
+import nodemailer from "nodemailer";
+
 
 type SendEmailParams = {
 	to: string | string[]
