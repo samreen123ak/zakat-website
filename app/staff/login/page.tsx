@@ -6,7 +6,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Heart, AlertCircle, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { setAuthToken, API_BASE_URL } from "@/lib/auth-utils"
+import { setAuthToken} from "@/lib/auth-utils"
 
 export default function StaffLoginPage() {
   const router = useRouter()
@@ -21,7 +21,7 @@ export default function StaffLoginPage() {
     setLoading(true)
 
     try {
-      const apiUrl = `${API_BASE_URL}/api/auth/login`
+      const apiUrl = `/api/auth/login`
       console.log("Login API URL:", apiUrl)
 
       const res = await fetch(apiUrl, {

@@ -419,7 +419,7 @@ function DocumentViewer({
 }) {
   if (!isOpen || !doc) return null
 
-  const documentUrl = `${API_BASE_URL}/api/documents/${doc.filename}`
+  const documentUrl = `/api/documents/${doc.filename}`
   const isPdf = doc.mimeType === "application/pdf"
   const isImage = doc.mimeType.startsWith("image/")
 
@@ -510,7 +510,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     const fetchCaseDetail = async () => {
       try {
         setLoading(true)
-        const url = `${API_BASE_URL}/api/zakat-applicants/${id}`
+        const url = `/api/zakat-applicants/${id}`
         const res = await fetch(url, {
           method: "GET",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -544,7 +544,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         const token = localStorage.getItem("rahmah_admin_token")
         if (!token) return
 
-        const url = `${API_BASE_URL}/api/grants?applicantId=${id}`
+        const url = `/api/grants?applicantId=${id}`
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -590,7 +590,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         return
       }
 
-      const applicantResponse = await fetch(`${API_BASE_URL}/api/zakat-applicants/${id}`, {
+      const applicantResponse = await fetch(`/api/zakat-applicants/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -618,7 +618,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           remarks: remarks || "",
         }
 
-        const grantResponse = await fetch(`${API_BASE_URL}/api/grants`, {
+        const grantResponse = await fetch(`/api/grants`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -641,7 +641,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       }
 
       // Refresh grant data to get the latest information
-      const grantRefreshResponse = await fetch(`${API_BASE_URL}/api/grants?applicantId=${id}`, {
+      const grantRefreshResponse = await fetch(`/api/grants?applicantId=${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

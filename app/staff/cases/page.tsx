@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Heart, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { getAuthToken, removeAuthToken, API_BASE_URL, authenticatedFetch } from "@/lib/auth-utils"
+import { getAuthToken, removeAuthToken, authenticatedFetch } from "@/lib/auth-utils"
 
 interface Document {
   filename: string
@@ -49,7 +49,7 @@ export default function CasesPage() {
   useEffect(() => {
     const fetchCases = async () => {
       try {
-        const res = await authenticatedFetch(`${API_BASE_URL}/api/zakat-applicants`, {
+        const res = await authenticatedFetch(`/api/zakat-applicants`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         })

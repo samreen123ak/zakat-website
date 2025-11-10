@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CheckCircle2, TrendingUp, FileText, Heart, LogOut, Shield } from "lucide-react"
-import { removeAuthToken, getAuthToken, API_BASE_URL, authenticatedFetch } from "@/lib/auth-utils"
+import { removeAuthToken, getAuthToken, authenticatedFetch } from "@/lib/auth-utils"
 
 type ZakatApplicant = {
   id?: string | number
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     try {
       const token = getAuthToken()
       if (token) {
-        await authenticatedFetch(`${API_BASE_URL}/api/auth/logout`, {
+        await authenticatedFetch(`/api/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchApplicants = async () => {
       try {
-        const res = await authenticatedFetch(`${API_BASE_URL}/api/zakat-applicants`)
+        const res = await authenticatedFetch(`/api/zakat-applicants`)
         const json = await res.json()
 
         const dataArray: any[] = Array.isArray(json) ? json : json.items || json.data || []
