@@ -22,4 +22,9 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true },
 )
 
+if (process.env.NODE_ENV === "development" && mongoose.models.Notification) {
+  delete mongoose.models.Notification
+  delete (mongoose as any).modelSchemas.Notification
+}
+
 export default mongoose.models.Notification || mongoose.model("Notification", notificationSchema)
